@@ -1,8 +1,9 @@
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
-
-import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
+
+import { fetchImages } from "./js/pixabay-api";
+import { handleResponse } from "./js/render-functions";
 
 const form = document.querySelector('#form');
 const loader = document.querySelector('.loader');
@@ -34,11 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loader.style.display = 'inline-block';
     gallery.innerHTML = '';
 
-    fetch(
-      `https://pixabay.com/api/?key=42390254-a1d01e86edd47d7ed3c2f6c78&q=${userInput}&image_type=photo&orientation=horizontal&safesearch=true`
-    )
-      .then(response => response.json())
-      .then(data => handleResponse(data))
+    
+    fetchImages(userInput)
+      .then(data => handleResponse(data, gallery, options, form))
       .catch(error => {
         console.error('Error fetching data:', error);
       })
@@ -47,33 +46,5 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-  function handleResponse(data) {
-    if (data.hits.length === 0) {
-      iziToast.error({
-        title: '',
-        backgroundColor: '#EF4040',
-        message:
-          'Sorry, there are no images matching your search query. Please try again!',
-        position: 'topRight'
-      });
-    } else {
-      const markup = data.hits
-        .map(data => {
-          return `<li class="gallery-item"><a href="${data.webformatURL}">
-          <img class="gallery-image" src="${data.webformatURL}" alt="${data.tags}"></a>
-          <div class='comments'>
-          <p><b>Likes: </b>${data.likes}</p>
-          <p><b>Views: </b>${data.views}</p>
-          <p><b>Comments: </b>${data.comments}</p>
-          <p><b>Downloads: </b>${data.downloads}</p>
-          </div>
-          </li>`;
-        })
-        .join('');
-      gallery.insertAdjacentHTML('afterbegin', markup);
-      const lightbox = new SimpleLightbox('.gallery a', options);
-      lightbox.refresh();
-      form.reset();
-    }
-  }
+
 });
